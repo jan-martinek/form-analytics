@@ -6,6 +6,7 @@ function FormAnalytics() {
 	this.form = null;
 	this.id = null;
 	
+	this.dates = [];
 	this.cases = [];
 	this.questions = {};
 	this.categories = {};
@@ -75,12 +76,15 @@ function FormAnalytics() {
 	
 	
 	this.prepData = function(data, tabletop) {
-		
-		this.cases = data;
-		
 		for (var id in data) {
 			var respondent = data[id];
 			if (respondent['Zadejte identifikátor dotazníku'] != this.id) continue;
+			
+			this.cases.push(respondent);
+			
+			var date = respondent['Časová značka'].split('.');
+			var dateObj = new Date(parseInt(date[2]), parseInt(date[1])-1, parseInt(date[0]));
+			this.dates.push(dateObj.getTime());
 			
 			for (var question in respondent) {
 				var answer = respondent[question];
@@ -92,6 +96,7 @@ function FormAnalytics() {
 			}
 		}
 		
+		this.dates.sort();
 		this.showResults();
 	}
 	
@@ -138,6 +143,10 @@ function FormAnalytics() {
 		}
 		
 		output += '</table>';
+		
+		var since = new Date(this.dates[0]);
+		var until = new Date(this.dates[this.dates.length - 1]);
+		output += '<p>Sebráno celkem ' + this.cases.length + ' odpovědí v období od ' + since.toLocaleDateString() + ' do ' + until.toLocaleDateString() + '.</p>';
 		
 		/*var addressTpl = '<p><strong>%Jméno%</strong><br>%Pozice%<br><a href="mailto:%E-mail%">%E-mail%</a><br>+420 %Telefon%</p>';
 		

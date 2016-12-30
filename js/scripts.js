@@ -94,13 +94,9 @@ function FormAnalytics() {
 			
 			if (this.categories[qNumber]) {
 				output += '<tr>';
-				output += '<th colspan="4"><h2>' + this.categories[qNumber] + '</h2></th>';
-				output += '</tr>';
-				
-				output += '<tr>';
-				output += '<td colspan="2"></td>';
-				output += '<th>průměr</th>';
-				output += '<th>σ</th>';
+				output += '<th colspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
+				output += '<th valign="bottom">průměr</th>';
+				output += '<th valign="bottom">σ</th>';
 				output += '</tr>';	
 			}
 			

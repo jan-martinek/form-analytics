@@ -33,8 +33,6 @@ function FormAnalytics() {
 			}
 		}
 		
-		console.log(this.categories);
-		
 		
 		if (this.form && this.id) {
 			this.tabletop = Tabletop.init({ 
@@ -43,35 +41,6 @@ function FormAnalytics() {
 				callback: this.prepData.bind(this)
 			});
 		}
-		
-		/*switch (doc) {
-			case 'contacts':
-				
-			case 'timetable':
-				this.tabletop = Tabletop.init({ 
-					key: '1Bb4kXtTcbuyubmSnSXlsOg6qXG5etEzSxdj9ojV_9mM', 
-					callback: this.showTimetable.bind(this)
-				});
-				break;
-			case 'todos':
-				this.tabletop = Tabletop.init({ 
-					key: '1Bb4kXtTcbuyubmSnSXlsOg6qXG5etEzSxdj9ojV_9mM', 
-					callback: this.showTodos.bind(this)
-				});
-				break;
-			case 'files':
-				var that = this;
-				jQuery.get('/content/files.html', function(data) {
-				    that.showFiles(data);
-				});
-				break;
-			default:
-				this.tabletop = Tabletop.init({
-					key: '17JMfqYbXJswV2t9_NnxBBjjJ5ZXCqiFAoqDIRLsyn8k', 
-					callback: this.showNews.bind(this),
-					simpleSheet: true
-				});
-		}*/
 	};
 	
 	
@@ -102,9 +71,6 @@ function FormAnalytics() {
 	
 	this.showResults = function()
 	{
-		console.log(this.cases);
-		console.log(this.questions);
-		
 		var output = '<table>';
 		var qNumber = 1;
 		
@@ -147,20 +113,10 @@ function FormAnalytics() {
 		var since = new Date(this.dates[0]);
 		var until = new Date(this.dates[this.dates.length - 1]);
 		output += '<p>Sebráno celkem ' + this.cases.length + ' odpovědí v období od ' + since.toLocaleDateString() + ' do ' + until.toLocaleDateString() + '.</p>';
-		
-		/*var addressTpl = '<p><strong>%Jméno%</strong><br>%Pozice%<br><a href="mailto:%E-mail%">%E-mail%</a><br>+420 %Telefon%</p>';
-		
-		output += this.showContactsSection(data.Koordinace.elements, 'Koordinace');
-		output += this.showContactsSection(data.KA1.elements, 'KA1 Strategické plánování');
-		output += this.showContactsSection(data.KA2.elements, 'KA2 Fundraising');*/
 
 		document.getElementById("content").innerHTML = output;
 		spinner.stop();	
 	}
-	
-	
-	
-	
 	
 	
 	
@@ -173,10 +129,6 @@ function FormAnalytics() {
 		##     ## ##       ##       ##        ##       ##    ##  ##    ##
 		##     ## ######## ######## ##        ######## ##     ##  ######
 	*/
-	
-	this.nl2br = function(str) {
-	  return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br>$2');
-	}
 	
 	this.getQueryVariables = function() 
 	{

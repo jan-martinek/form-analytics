@@ -95,6 +95,8 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 	
 	this.showResults = function()
 	{
+		document.getElementById('surveyId').innerHTML = this.survey.id;
+		
 		var output = '<table>';
 		var descColHeaders = '<th valign="bottom">průměr</th>' + '<th valign="bottom">σ</th>';
 		var qNumber = 1;

@@ -8,8 +8,12 @@ function SurveyData(slug, id) {
 	this.dates = [];
 	this.cases = [];
 	this.questions = {};
+	this.descriptives = {};
 	
 	this.dataPrepped = false;
+	
+	this.firstEntryTime = null;
+	this.lastEntryTime = null;
 	
 	this.init = function() {
 		console.log('Getting survey data.');
@@ -48,87 +52,18 @@ function SurveyData(slug, id) {
 		this.dataPrepped = true;
 	}
 	
-}
-
-function ResultsViewer(categories, survey, secondarySurvey) {
-	this.categories = categories;
-	this.survey = survey;
-	this.secondarySurvey = secondarySurvey;
-	
-	this.showResults = function()
+	this.calcDescriptives = function()
 	{
-		var output = '<table>';
-		var qNumber = 1;
-		
-		var caseStruct = this.survey.cases[0];
+		var caseStruct = this.cases[0];
 		for (var question in caseStruct) {
 			if (question == 'Časová značka') continue;
 			if (question == 'Zadejte identifikátor dotazníku') continue;			
 			
-			var values = this.survey.questions[question];
-			var desc = this.calcDescriptives(values);
-			
-			if (this.secondarySurvey && this.secondarySurvey.questions[question]) {
-				var values2 = this.secondarySurvey.questions[question];
-				var desc2 = this.calcDescriptives(values2);	
-			}
-			
-			if (this.categories[qNumber]) {
-				output += '<tr>';
-				if (this.secondarySurvey) {
-					output += '<th colspan="2" rowspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
-					output += '<th colspan="2" valign="bottom"><h2>' + this.survey.name + '</h2</th>';
-					output += '<th colspan="2" valign="bottom"><h2>' + this.secondarySurvey.name + '</h2</th>';
-					output += '</tr>';	
-					output += '<tr>';	
-					output += '<th valign="bottom">průměr</th>';
-					output += '<th valign="bottom">σ</th>';
-					output += '<th valign="bottom">průměr</th>';
-					output += '<th valign="bottom">σ</th>';
-				} else {
-					output += '<th colspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
-					output += '<th valign="bottom">průměr</th>';
-					output += '<th valign="bottom">σ</th>';
-				}
-				output += '</tr>';	
-			}
-			
-			output += '<tr>';
-			output += '<td>' + qNumber + '</td>';
-			output += '<th>' + question + '</th>';
-			output += '<td title="' + values.join(',') + '">' + desc.avg.toFixed(2) + '</td>';
-			output += '<td>' + desc.stdDev.toFixed(3) + '</td>';
-			
-			if (this.secondarySurvey && this.secondarySurvey.questions[question]) {
-				output += '<td title="' + values2.join(',') + '">' + desc2.avg.toFixed(2) + '</td>';
-				output += '<td>' + desc2.stdDev.toFixed(3) + '</td>';
-			}
-			
-			output += '</tr>';
-			qNumber++;
-		}
-		
-		output += '</table>';
-		output = this.generateDatasetDescription() + output;
-		
-		document.getElementById("content").innerHTML = output;
-		spinner.stop();	
-	}
-	
-	this.generateDatasetDescription = function() {
-		var since = new Date(this.survey.dates[0]);
-		var until = new Date(this.survey.dates[this.survey.dates.length - 1]);
-		
-		if (this.secondarySurvey) {
-			var since2 = new Date(this.secondarySurvey.dates[0]);
-			var until2 = new Date(this.secondarySurvey.dates[this.secondarySurvey.dates.length - 1]);
-			return '<p>V dotazníku <b>' + this.survey.name + '</b> bylo sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + since.toLocaleDateString() + ' do ' + until.toLocaleDateString() + '.<br> V dotazníku <b>' + this.secondarySurvey.name + '</b> bylo sebráno celkem ' + this.secondarySurvey.cases.length + ' odpovědí v období od ' + since2.toLocaleDateString() + ' do ' + until2.toLocaleDateString() + '.</p>';	
-		} else {
-			return '<p>Sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + since.toLocaleDateString() + ' do ' + until.toLocaleDateString() + '.</p>';	
+			this.descriptives[question] = this.calcQuestionDescriptives(this.questions[question]);			
 		}
 	}
 	
-	this.calcDescriptives = function(values) {
+	this.calcQuestionDescriptives = function(values) {
 		var sum = values.reduce(function(a, b) { return parseInt(a) + parseInt(b); });
 		var avg = sum / values.length;
 		
@@ -145,6 +80,82 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 			stdDev: stdDev	
 		};
 	}
+	
+	this.calcSurveyTimespan = function() {
+		this.firstEntryTime = new Date(this.dates[0]);
+		this.lastEntryTime = new Date(this.dates[this.dates.length - 1]);
+	}
+	
+}
+
+function ResultsViewer(categories, survey, secondarySurvey) {
+	this.categories = categories;
+	this.survey = survey;
+	this.secondarySurvey = secondarySurvey;
+	
+	this.showResults = function()
+	{
+		var output = '<table>';
+		var descColHeaders = '<th valign="bottom">průměr</th>' + '<th valign="bottom">σ</th>';
+		var qNumber = 1;
+		
+		var caseStruct = this.survey.cases[0];
+		for (var question in caseStruct) {
+			if (question == 'Časová značka') continue;
+			if (question == 'Zadejte identifikátor dotazníku') continue;			
+			
+			if (this.categories[qNumber]) {
+				output += '<tr>';
+				
+				if (this.secondarySurvey) {
+					output += '<th colspan="2" rowspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
+					output += '<th colspan="2" valign="bottom"><h2>' + this.survey.name + '</h2</th>';
+					output += '<th colspan="2" valign="bottom"><h2>' + this.secondarySurvey.name + '</h2</th>';
+					output += '</tr>';	
+					output += '<tr>';	
+					output += descColHeaders + descColHeaders;
+				} else {
+					output += '<th colspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
+					output += descColHeaders;
+				}
+				output += '</tr>';	
+			}
+			
+			output += '<tr>';
+			output += '<td>' + qNumber + '</td>';
+			output += '<th>' + question + '</th>';
+			output += this.viewDescriptions(this.survey.questions[question], survey.descriptives[question]);
+			
+			if (this.secondarySurvey && this.secondarySurvey.questions[question]) {
+				output += this.viewDescriptions(this.secondarySurvey.questions[question];, secondarySurvey.descriptives[question]);
+			}
+			
+			output += '</tr>';
+			qNumber++;
+		}
+		
+		output += '</table>';
+		output = this.generateDatasetDescription() + output;
+		
+		document.getElementById("content").innerHTML = output;
+		spinner.stop();	
+	}
+	
+	this.viewDescriptions = function(values, descriptives) {
+		var output = '<td title="' + values.join(',') + '">' + descriptives.avg.toFixed(2) + '</td>';
+		output += '<td>' + descriptives.stdDev.toFixed(3) + '</td>';
+		return output;
+	}
+	
+	this.generateDatasetDescription = function() {
+		if (this.secondarySurvey) {
+			return '<p>V dotazníku <b>' + this.survey.name + '</b> bylo sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + this.survey.firstEntryTime.toLocaleDateString() + ' do ' + this.survey.lastEntryTime.toLocaleDateString() + '.<br> V dotazníku <b>' + this.secondarySurvey.name + '</b> bylo sebráno celkem ' + this.secondarySurvey.cases.length + ' odpovědí v období od ' + this.secondarySurvey.firstEntryTime.toLocaleDateString() + ' do ' + this.secondarySurvey.lastEntryTime.toLocaleDateString() + '.</p>';	
+		} else {
+			return '<p>Sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + this.survey.firstEntryTime.toLocaleDateString() + ' do ' + this.survey.lastEntryTime.toLocaleDateString() + '.</p>';	
+		}
+	}
+	
+
 }
 
 function FormAnalytics() {
@@ -157,7 +168,6 @@ function FormAnalytics() {
 		this.requestParams = this.getQueryVariables();
 		this.prepCategories();
 		this.fetchSurveyData();
-		this.fetchSurveyNames();
 	};
 	
 	this.prepCategories = function() {
@@ -188,7 +198,7 @@ function FormAnalytics() {
 				this.secondarySurvey = new SurveyData(this.requestParams.form2, surveyId);	
 				this.secondarySurvey.init();
 			}
-			this.showResultsWhenReady();
+			this.analyzeDataWhenReady();
 		}
 	}
 	
@@ -197,23 +207,32 @@ function FormAnalytics() {
 		this.secondarySurvey.name = this.requestParams.name2 ? this.requestParams.name2: 'B';
 	}
 	
-	this.showResultsWhenReady = function()
-	{
+
+	
+	this.analyzeDataWhenReady = function() {
 		var ready = this.secondarySurvey ? this.survey.dataPrepped && this.secondarySurvey.dataPrepped : this.survey.dataPrepped;
 		
 		if (ready) {
-			var viewer = new ResultsViewer(this.categories, this.survey, this.secondarySurvey);
-			viewer.showResults();
+			this.analyzeData();
 		} else {
 			console.log('Waiting for data.');
 			var that = this;
 			window.setTimeout(function(){
-				that.showResultsWhenReady();
+				that.analyzeDataWhenReady();
 			}, 300);
 		}
 	}
 	
-	
+	this.analyzeData = function() {
+		this.fetchSurveyNames();
+		this.survey.calcSurveyTimespan();	
+		this.secondarySurvey.calcSurveyTimespan();	
+		this.survey.calcDescriptives();
+		this.secondarySurvey.calcDescriptives();
+		
+		var viewer = new ResultsViewer(this.categories, this.survey, this.secondarySurvey);
+		viewer.showResults();
+	}
 	
 	
 	

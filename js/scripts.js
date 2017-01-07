@@ -127,7 +127,7 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 			output += this.viewDescriptions(this.survey.questions[question], survey.descriptives[question]);
 			
 			if (this.secondarySurvey && this.secondarySurvey.questions[question]) {
-				output += this.viewDescriptions(this.secondarySurvey.questions[question];, secondarySurvey.descriptives[question]);
+				output += this.viewDescriptions(this.secondarySurvey.questions[question], secondarySurvey.descriptives[question]);
 			}
 			
 			output += '</tr>';
@@ -142,8 +142,17 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 	}
 	
 	this.viewDescriptions = function(values, descriptives) {
-		var output = '<td title="' + values.join(',') + '">' + descriptives.avg.toFixed(2) + '</td>';
-		output += '<td>' + descriptives.stdDev.toFixed(3) + '</td>';
+		// arbitrary values used
+		
+		var min = 1;
+		var max = 6;
+		var avgHue = Math.round((descriptives.avg * 100/(max-min))-min);
+		
+		var maxStdDev = 3.54;
+		var stdDevRedLightness = Math.round(descriptives.stdDev * 50/maxStdDev);
+		
+		var output = '<td title="' + values.join(',') + '" style="background: hsl('+avgHue+', 100%, 70%);">' + descriptives.avg.toFixed(2) + '</td>';
+		output += '<td style="color: hsl(0, 70%, '+stdDevRedLightness+'%);">' + descriptives.stdDev.toFixed(3) + '</td>';
 		return output;
 	}
 	

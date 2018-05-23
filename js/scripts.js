@@ -1,8 +1,7 @@
 "use strict";
 
-function SurveyData(slug, id) {
+function SurveyData(slug) {
 	this.slug = slug;
-	this.id = id;
 	this.name = null;
 	
 	this.dates = [];
@@ -29,9 +28,7 @@ function SurveyData(slug, id) {
 		console.log('Processing survey data.');
 		
 		for (var id in data) {
-			var respondent = data[id];
-			if (respondent['Zadejte identifikátor dotazníku'] != this.id) continue;
-			
+			var respondent = data[id];			
 			this.cases.push(respondent);
 			
 			var date = respondent['Časová značka'].split('.');
@@ -57,8 +54,6 @@ function SurveyData(slug, id) {
 		var caseStruct = this.cases[0];
 		for (var question in caseStruct) {
 			if (question == 'Časová značka') continue;
-			if (question == 'Zadejte identifikátor dotazníku') continue;			
-			
 			this.descriptives[question] = this.calcQuestionDescriptives(this.questions[question]);			
 		}
 	}
@@ -88,31 +83,31 @@ function SurveyData(slug, id) {
 	
 }
 
-function ResultsViewer(categories, survey, secondarySurvey) {
+function ResultsViewer(org, categories, survey, zamSurvey) {
 	this.categories = categories;
-	this.survey = survey;
-	this.secondarySurvey = secondarySurvey;
+	this.org = org;
+	this.manSurvey = survey;
+	this.zamSurvey = zamSurvey;
 	
 	this.showResults = function()
 	{
-		document.getElementById('surveyId').innerHTML = this.survey.id;
+		document.getElementById('org').innerHTML = this.org;
 		
 		var output = '<table>';
 		var descColHeaders = '<th valign="bottom">průměr</th>' + '<th valign="bottom">σ</th>';
-		var qNumber = 1;
+		var qNumber = 0;
 		
-		var caseStruct = this.survey.cases[0];
+		var caseStruct = this.manSurvey.cases[0];
 		for (var question in caseStruct) {
 			if (question == 'Časová značka') continue;
-			if (question == 'Zadejte identifikátor dotazníku') continue;			
 			
 			if (this.categories[qNumber]) {
 				output += '<tr>';
 				
-				if (this.secondarySurvey) {
+				if (this.zamSurvey) {
 					output += '<th colspan="2" rowspan="2"><h2>' + this.categories[qNumber] + '</h2></th>';
-					output += '<th colspan="2" valign="bottom"><h2>' + this.survey.name + '</h2</th>';
-					output += '<th colspan="2" valign="bottom"><h2>' + this.secondarySurvey.name + '</h2</th>';
+					output += '<th colspan="2" valign="bottom"><h2>' + this.manSurvey.name + '</h2</th>';
+					output += '<th colspan="2" valign="bottom"><h2>' + this.zamSurvey.name + '</h2</th>';
 					output += '</tr>';	
 					output += '<tr>';	
 					output += descColHeaders + descColHeaders;
@@ -124,12 +119,12 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 			}
 			
 			output += '<tr>';
-			output += '<td>' + qNumber + '</td>';
+			output += '<td>' + (qNumber + 1) + '</td>';
 			output += '<th>' + question + '</th>';
-			output += this.viewDescriptions(this.survey.questions[question], survey.descriptives[question]);
+			output += this.viewDescriptions(this.manSurvey.questions[question], survey.descriptives[question]);
 			
-			if (this.secondarySurvey && this.secondarySurvey.questions[question]) {
-				output += this.viewDescriptions(this.secondarySurvey.questions[question], secondarySurvey.descriptives[question]);
+			if (this.zamSurvey && this.zamSurvey.questions[question]) {
+				output += this.viewDescriptions(this.zamSurvey.questions[question], zamSurvey.descriptives[question]);
 			}
 			
 			output += '</tr>';
@@ -159,10 +154,10 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 	}
 	
 	this.generateDatasetDescription = function() {
-		if (this.secondarySurvey) {
-			return '<p>V dotazníku <b>' + this.survey.name + '</b> bylo sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + this.survey.firstEntryTime.toLocaleDateString() + ' do ' + this.survey.lastEntryTime.toLocaleDateString() + '.<br> V dotazníku <b>' + this.secondarySurvey.name + '</b> bylo sebráno celkem ' + this.secondarySurvey.cases.length + ' odpovědí v období od ' + this.secondarySurvey.firstEntryTime.toLocaleDateString() + ' do ' + this.secondarySurvey.lastEntryTime.toLocaleDateString() + '.</p>';	
+		if (this.zamSurvey) {
+			return '<p>V dotazníku <b>' + this.manSurvey.name + '</b> bylo sebráno celkem ' + this.manSurvey.cases.length + ' odpovědí v období od ' + this.manSurvey.firstEntryTime.toLocaleDateString() + ' do ' + this.manSurvey.lastEntryTime.toLocaleDateString() + '.<br> V dotazníku <b>' + this.zamSurvey.name + '</b> bylo sebráno celkem ' + this.zamSurvey.cases.length + ' odpovědí v období od ' + this.zamSurvey.firstEntryTime.toLocaleDateString() + ' do ' + this.zamSurvey.lastEntryTime.toLocaleDateString() + '.</p>';	
 		} else {
-			return '<p>Sebráno celkem ' + this.survey.cases.length + ' odpovědí v období od ' + this.survey.firstEntryTime.toLocaleDateString() + ' do ' + this.survey.lastEntryTime.toLocaleDateString() + '.</p>';	
+			return '<p>Sebráno celkem ' + this.manSurvey.cases.length + ' odpovědí v období od ' + this.manSurvey.firstEntryTime.toLocaleDateString() + ' do ' + this.manSurvey.lastEntryTime.toLocaleDateString() + '.</p>';	
 		}
 	}
 	
@@ -172,11 +167,13 @@ function ResultsViewer(categories, survey, secondarySurvey) {
 function FormAnalytics() {
 	this.requestParams = null;
 	this.categories = {};
-	this.survey = null;
-	this.secondarySurvey = null;
+	this.org = null;
+	this.manSurvey = null;
+	this.zamSurvey = null;
 
 	this.init = function() {
 		this.requestParams = this.getQueryVariables();
+		this.org = this.requestParams.org;
 		this.prepCategories();
 		this.fetchSurveyData();
 	};
@@ -189,39 +186,25 @@ function FormAnalytics() {
 		}
 	}
 	
-	this.fetchSurveyData = function() {
-		if (this.requestParams['id']) {
-			var surveyId = this.requestParams.id;	
-		} else {
-			var id = prompt('Zadejte identifikátor dotazníku');
-			if (id) {
-				window.location.href = window.location.href + '&id=' + id;	
-			} else {
-				alert('Bez zadání identifikátoru dotazníku jej není možné vyhodnotit.');
-			}
-		}
-		
-		if (this.requestParams.form && surveyId) {
-			this.survey = new SurveyData(this.requestParams.form, surveyId);
-			this.survey.init();
+	this.fetchSurveyData = function() {		
+		this.manSurvey = new SurveyData(this.requestParams.manId);
+		this.manSurvey.init();
 			
-			if (this.requestParams.form2) {
-				this.secondarySurvey = new SurveyData(this.requestParams.form2, surveyId);	
-				this.secondarySurvey.init();
-			}
-			this.analyzeDataWhenReady();
-		}
+		this.zamSurvey = new SurveyData(this.requestParams.zamId);	
+		this.zamSurvey.init();
+			
+		this.analyzeDataWhenReady();
 	}
 	
 	this.fetchSurveyNames = function() {
-		this.survey.name = this.requestParams.name ? this.requestParams.name: 'A';
-		this.secondarySurvey.name = this.requestParams.name2 ? this.requestParams.name2: 'B';
+		this.manSurvey.name = 'MGMT';
+		this.zamSurvey.name = 'ZAM';
 	}
 	
 
 	
 	this.analyzeDataWhenReady = function() {
-		var ready = this.secondarySurvey ? this.survey.dataPrepped && this.secondarySurvey.dataPrepped : this.survey.dataPrepped;
+		var ready = this.zamSurvey ? this.manSurvey.dataPrepped && this.zamSurvey.dataPrepped : this.manSurvey.dataPrepped;
 		
 		if (ready) {
 			this.analyzeData();
@@ -236,12 +219,12 @@ function FormAnalytics() {
 	
 	this.analyzeData = function() {
 		this.fetchSurveyNames();
-		this.survey.calcSurveyTimespan();	
-		this.secondarySurvey.calcSurveyTimespan();	
-		this.survey.calcDescriptives();
-		this.secondarySurvey.calcDescriptives();
+		this.manSurvey.calcSurveyTimespan();	
+		this.zamSurvey.calcSurveyTimespan();	
+		this.manSurvey.calcDescriptives();
+		this.zamSurvey.calcDescriptives();
 		
-		var viewer = new ResultsViewer(this.categories, this.survey, this.secondarySurvey);
+		var viewer = new ResultsViewer(this.org, this.categories, this.manSurvey, this.zamSurvey);
 		viewer.showResults();
 	}
 	

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="foundation-6.2.4-complete/css/foundation.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css?v=2">
+    <title>Generátor odkazů</title>
+  </head>
+  <body>
+  
+  <div id="spinner"></div>
+  
+  <div class="row">
+    <div class="columns">
+      <h1>Generátor odkazů</h1>
+
+      <p>
+        <b>Stručný návod použití:</b>
+      </p>
+
+      <ol>
+        <li>Vytvořte kopie ze šablon obou dotazníků.</li>
+        <li>Zkopírujte adresy formulářů z dialogového okna „Odeslat formulář“.<br>
+          <a href="./form-link.png"><img src="./form-link.png" width="200"></a>
+        </li>
+        <li>Adresy vložte do generátoru níže. Uschovejte si vygenerované odkazy.</li>
+      </ol>
+    </div>
+    <div id="content" class="columns">
+      <h2>Údaje</h2>
+
+      <label>
+        <p>
+          Název organizace<br>
+          <input type="text" name="org">
+        </p>
+      </label>
+
+      <label>
+        <p>
+          Odkaz na dotazník pro zaměstnance<br>
+          <small><b>Vzor:</b> https://docs.google.com/forms/d/e/1FAIpQLSdSyRurVBp9P_EPT6LYh00chJzfZCvFudzwZJPi1froEY2fqA/viewform</small>
+          <input type="text" name="zam">
+        </p>        
+      </label>
+
+      <label>
+        <p>
+          Odkaz na dotazník pro manažery<br>
+          <small><b>Vzor:</b> https://docs.google.com/forms/d/e/1FAIpQLSdSyRurVBp9P_EPT6LYh00chJzfZCvFudzwZJPi1froEY2fqA/viewform</small>
+          <input type="text" name="man">
+        </p>
+      </label>
+    </div>
+    <div class="large-8 columns">
+      <h2>Info pro zkopírování</h2>
+      <label>
+        <p>
+          Vygenerované odkazy si prosím uložte.
+          <textarea name="res" rows="20"></textarea>
+        </p>
+      </label>
+    </div>
+    <div class="large-4 columns">
+      <h2>Klikací odkazy</h2>
+      <div class="links"></div>
+    </div>
+  </div>
+  
+  <script type="text/javascript">
+    var org = document.querySelector('input[name="org"]');
+    var zam = document.querySelector('input[name="zam"]');
+    var man = document.querySelector('input[name="man"]');
+    var res = document.querySelector('textarea[name="res"]');
+    var links = document.querySelector('.links');
+
+    document.addEventListener("DOMContentLoaded", function() { 
+      var inputs = [org, zam, man];
+      inputs.forEach(function (input) {
+        input.addEventListener('input', updateLinks);
+      });
+    });
+
+    function updateLinks() {
+      var orgName = org.value;
+      var zamId = parseFormId(zam.value);
+      var manId = parseFormId(man.value);
+
+      if (orgName && zamId && manId) {
+        var info = [
+          'Organizace: ' + orgName,
+          'Odkaz na dotazník pro zaměstnance:\n' + formLink(zamId),
+          'Odkaz na dotazník pro manažery:\n' + formLink(manId),
+          'Vyhodnocení dotazníku:\n' + resLink(orgName, zamId, manId)
+        ]
+
+        res.value = info.join('\n\n');
+
+        links.innerHTML = info.map(function(item, index) {
+          if (index == 0) return '';
+          var parts = item.split(/:\s/);
+          return '<a href="' + parts[1] + '">' + parts[0] + '</a>';
+        }).join('<br>');
+      } else {
+        if (zam.value && man.value) {
+          res.value = 'Zkontrolujte prosím adresy formulářů. Vypadá to, že nejsou v pořádku.';   
+        } else {
+          res.value = 'Doplňte prosím všechny potřebné údaje.';   
+        }
+      }
+    }
+
+    function formLink(id) {
+      return 'https://docs.google.com/forms/d/e/' + id + '/viewform';
+    }
+
+    function resLink(name, zamId, manId) {
+      var base = 'http://jan-martinek.github.io/form-analytics/result.html?';
+      
+      var params = [
+        'org='   + encodeURIComponent(name),
+        'zamId=' + encodeURIComponent(zamId),
+        'manId=' + encodeURIComponent(manId),
+        'c1='    + encodeURIComponent('Plánování'),
+        'c16='   + encodeURIComponent('Organizování'),
+        'c27='   + encodeURIComponent('Vedení a komunikace'),
+        'c43='   + encodeURIComponent('Kontrola, hodnocení a zpětná vazba vedoucí ke změně'),
+      ];
+
+      return base + params.join('&');
+    }
+
+    function parseFormId(url) {
+      var re = /e\/(.+)\/viewform/;
+
+      if (url.match(re)) return re.exec(url)[1];
+      else return false;
+    }
+
+
+  </script>
+  </body>
+</html>

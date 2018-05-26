@@ -95,7 +95,7 @@ function ResultsViewer(org, categories, survey, zamSurvey) {
 		
 		var output = '<table>';
 		var descColHeaders = '<th valign="bottom">průměr</th>' + '<th valign="bottom">σ</th>';
-		var qNumber = 0;
+		var qNumber = 1;
 		
 		var caseStruct = this.manSurvey.cases[0];
 		for (var question in caseStruct) {
@@ -119,7 +119,7 @@ function ResultsViewer(org, categories, survey, zamSurvey) {
 			}
 			
 			output += '<tr>';
-			output += '<td>' + (qNumber + 1) + '</td>';
+			output += '<td>' + qNumber + '</td>';
 			output += '<th>' + question + '</th>';
 			output += this.viewDescriptions(this.manSurvey.questions[question], survey.descriptives[question]);
 			
@@ -173,6 +173,10 @@ function FormAnalytics() {
 
 	this.init = function() {
 		this.requestParams = this.getQueryVariables();
+		for (const prop in this.requestParams) {
+			this.requestParams[prop] = this.requestParams[prop][0];
+		}
+
 		this.org = this.requestParams.org;
 		this.prepCategories();
 		this.fetchSurveyData();

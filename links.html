@@ -71,6 +71,8 @@
     var org = document.querySelector('input[name="org"]');
     var zam = document.querySelector('input[name="zam"]');
     var man = document.querySelector('input[name="man"]');
+    var zamDoc = document.querySelector('input[name="zamDoc"]');
+    var manDoc = document.querySelector('input[name="manDoc"]');
     var res = document.querySelector('textarea[name="res"]');
     var links = document.querySelector('.links');
 
@@ -85,13 +87,17 @@
       var orgName = org.value;
       var zamId = parseFormId(zam.value);
       var manId = parseFormId(man.value);
+      var zamDocId = parseFormDocId(zamDoc.value);
+      var manDocId = parseFormDocId(manDoc.value);
 
       if (orgName && zamId && manId) {
         var info = [
           'Organizace: ' + orgName,
           'Odkaz na dotazník pro zaměstnance:\n' + formLink(zamId),
           'Odkaz na dotazník pro manažery:\n' + formLink(manId),
-          'Vyhodnocení dotazníku:\n' + resLink(orgName, zamId, manId)
+          'Odkaz na tabulku odpovědí zaměstnanců:\n' + formDocLink(zamDocId),
+          'Odkaz na tabulku odpovědí manažerů:\n' + formDocLink(manDocId),
+          'Vyhodnocení dotazníku:\n' + resLink(orgName, zamDocId, manDocId),
         ]
 
         res.value = info.join('\n\n');
@@ -102,8 +108,8 @@
           return '<a href="' + parts[1] + '">' + parts[0] + '</a>';
         }).join('<br>');
       } else {
-        if (zam.value && man.value) {
-          res.value = 'Zkontrolujte prosím adresy formulářů. Vypadá to, že nejsou v pořádku.';   
+        if (zam.value && man.value && zamDoc.value && manDoc.value) {
+          res.value = 'Zkontrolujte prosím adresy formulářů a tabulek. Vypadá to, že nejsou v pořádku.';   
         } else {
           res.value = 'Doplňte prosím všechny potřebné údaje.';   
         }
@@ -114,20 +120,31 @@
       return 'https://docs.google.com/forms/d/e/' + id + '/viewform';
     }
 
-    function resLink(name, zamId, manId) {
+    function formDocLink(id) {
+      return 'https://docs.google.com/spreadsheets/d/' + id + '/edit';
+    }
+
+    function resLink(name, zamDocId, manDocId) {
       var base = 'http://jan-martinek.github.io/form-analytics/v2/?';
       
       var params = [
         'org='   + encodeURIComponent(name),
-        'zamId=' + encodeURIComponent(zamId),
-        'manId=' + encodeURIComponent(manId),
+        'zamId=' + encodeURIComponent(zamDocId),
+        'manId=' + encodeURIComponent(manDocId),
         'c1='    + encodeURIComponent('Plánování'),
-        'c16='   + encodeURIComponent('Organizování'),
-        'c27='   + encodeURIComponent('Vedení a komunikace'),
-        'c43='   + encodeURIComponent('Kontrola, hodnocení a zpětná vazba vedoucí ke změně'),
+        'c17='   + encodeURIComponent('Organizování'),
+        'c28='   + encodeURIComponent('Vedení a komunikace'),
+        'c46='   + encodeURIComponent('Kontrola, hodnocení a zpětná vazba vedoucí ke změně'),
       ];
 
       return base + params.join('&');
+    }
+
+    function parseFormDocId(url) {
+      var re = /d\/(.+)\/edit/;
+
+      if (url.match(re)) return re.exec(url)[1];
+      else return false;
     }
 
     function parseFormId(url) {

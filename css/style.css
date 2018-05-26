@@ -56,7 +56,24 @@ a {
 	font-weight: bold;
 	background-color: darkblue;
 }
-
+label {
+	background: white;
+	padding: 1rem 1rem;
+	margin: 1rem 0;
+}
+label input,
+label textarea {
+	font-weight: normal;
+}
+label p {
+	font-size: 1rem;
+	font-weight: bold;
+}
+label p.example {
+	margin-top: -1rem;
+	margin-bottom: 0;
+	font-weight: normal;
+}
 .plan {
 	margin-bottom: 1rem;	
 }

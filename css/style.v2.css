@@ -65,6 +65,14 @@ label input,
 label textarea {
 	font-weight: normal;
 }
+label input[data-valid="invalid"],
+label input[data-valid="invalid"]:focus {
+	background: #fda;
+}
+label input[data-valid="valid"],
+label input[data-valid="valid"]:focus {
+	background: #bfa;
+}
 label p {
 	font-size: 1rem;
 	font-weight: bold;

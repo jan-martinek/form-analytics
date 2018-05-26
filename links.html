@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="foundation-6.2.4-complete/css/foundation.min.css">
-    <link rel="stylesheet" type="text/css" href="css/style.css?v=2">
+    <link rel="stylesheet" type="text/css" href="css/style.v2.css">
     <title>Generátor odkazů</title>
   </head>
   <body>
@@ -27,7 +27,7 @@
             </p>
           </label>
 
-        <li>Vytvořte kopie ze šablon obou dotazníků.</li>
+        <li>Vytvořte kopie ze šablon obou dotazníků a přehledně je pojmenujte.</li>
         <li>
           Zkopírujte adresy formulářů z dialogového okna „Odeslat formulář“.<br>
           <a href="./form-link.png"><img src="./form-link.png" width="200"></a>
@@ -49,12 +49,11 @@
           </label>
           
         </li>
-        <li>Adresy vložte do generátoru níže.</li>
         <li>
           Proklikněte se v obou formulářích na část „Odpovědi“ a 
-          vytvořte novou Google Spreadsheets tabulku. Otevřete tabulku a publikujte ji na web 
-          (<code>Soubor > Publikování na webu…</code>). Zkopírujte do následujících polí adresy, 
-          které vidíte v poli Adresa v prohlížeči (nikoli tu z dialogového okna).<br>
+          vytvořte novou tabulku Google Spreadsheets. Otevřete postupně obě tabulky a publikujte je 
+          na web (<code>Soubor > Publikování na webu…</code>). Zkopírujte do následujících polí 
+          adresy, které vidíte v poli Adresa v prohlížeči (nikoli tu z dialogového okna).<br>
 
           <label>
             <p>
@@ -100,13 +99,15 @@
     var links = document.querySelector('.links');
 
     document.addEventListener("DOMContentLoaded", function() { 
-      var inputs = [org, zam, man];
+      var inputs = [org, zam, man, zamDoc, manDoc];
       inputs.forEach(function (input) {
         input.addEventListener('input', updateLinks);
       });
     });
 
-    function updateLinks() {
+    function updateLinks(event) {
+      validateInput(event.target, parseFormId);  
+
       var orgName = org.value;
       var zamId = parseFormId(zam.value);
       var manId = parseFormId(man.value);
@@ -175,6 +176,20 @@
 
       if (url.match(re)) return re.exec(url)[1];
       else return false;
+    }
+
+    function validateInput(el) {
+      var parseFn = ['zam', 'man'].indexOf(el.getAttribute('name')) != -1
+        ? parseFormId
+        : ['zamDoc', 'manDoc'].indexOf(el.getAttribute('name')) != -1
+        ? parseFormDocId
+        : null;
+
+      if (parseFn) {
+        if (el.value === "") el.setAttribute('data-valid', 'empty');
+        else if (parseFn(el.value) === false) el.setAttribute('data-valid', 'invalid');
+        else el.setAttribute('data-valid', 'valid');  
+      }
     }
 
 
